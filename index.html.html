@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Win The Day</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Crimson+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --gold:#FFD55A;--gold-light:#FFE588;--gold-dim:#C9A030;--gold-pale:rgba(255,213,90,0.14);
+  --ink:#0D0A04;--ink2:#1A1208;--ink3:#252010;
+  --parchment:#F5EDD8;--parchment-dim:rgba(245,237,216,0.6);
+  --red:#C0392B;--red-dim:rgba(192,57,43,0.15);
+  --green:#2E7D52;--green-dim:rgba(46,125,82,0.15);
+  --amber:#C87F2A;--amber-dim:rgba(200,127,42,0.15);
+  --grey:#5A5A5A;--grey-dim:rgba(90,90,90,0.15);
+  --blue:#2A6A9A;
+}
+html,body{height:100%;background:var(--ink);font-family:'Crimson Pro',serif;overflow:hidden;color:var(--parchment)}
+
+/* ── HEADER ── */
+#header{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:var(--ink);
+  border-bottom:1px solid rgba(201,168,76,0.15);
+  padding:0 16px;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+#header-left{display:flex;align-items:center;gap:12px}
+#header h1{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--gold);font-weight:400;letter-spacing:2px}
+#streak-badge{
+  background:var(--gold-pale);border:1px solid rgba(201,168,76,0.3);
+  border-radius:20px;padding:3px 10px;
+  font-size:0.75rem;color:var(--gold-light);letter-spacing:1px;
+  display:flex;align-items:center;gap:4px;
+}
+#header-tabs{display:flex;gap:0}
+.htab{
+  background:none;border:none;padding:6px 12px;
+  font-family:'Crimson Pro',serif;font-size:0.8rem;letter-spacing:1px;
+  color:rgba(201,168,76,0.4);cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .2s;text-transform:uppercase;
+}
+.htab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* ── MAIN VIEWS ── */
+#view-day,#view-calendar,#view-records{
+  position:fixed;top:56px;left:0;right:0;bottom:0;
+  overflow-y:auto;
+  display:none;
+}
+#view-day,#view-calendar,#view-records{scrollbar-width:thin;scrollbar-color:rgba(201,168,76,0.2) transparent}
+
+/* ══════════════════════════════════════
+   DAY VIEW
+══════════════════════════════════════ */
+#view-day{padding:0 0 80px}
+
+/* Date nav */
+#date-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 10px;
+  border-bottom:1px solid rgba(201,168,76,0.08);
+}
+.nav-arrow{
+  background:none;border:1px solid rgba(201,168,76,0.2);border-radius:8px;
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  color:var(--gold);font-size:1.1rem;cursor:pointer;transition:all .2s;
+}
+.nav-arrow:active{background:var(--gold-pale)}
+.nav-arrow:disabled{opacity:0.25;cursor:default}
+#date-display{text-align:center}
+#date-main{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--parchment);letter-spacing:1px}
+#date-sub{font-size:0.72rem;color:rgba(201,168,76,0.5);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+#today-btn{
+  font-size:0.7rem;color:var(--gold-dim);background:none;border:none;cursor:pointer;
+  letter-spacing:1px;text-transform:uppercase;margin-top:3px;display:block;
+}
+
+/* Day type strip */
+#day-type-strip{
+  display:flex;justify-content:center;gap:8px;padding:10px 16px;
+  border-bottom:1px solid rgba(201,168,76,0.08);
+}
+.dtype-btn{
+  padding:5px 14px;border-radius:16px;font-size:0.75rem;letter-spacing:1px;
+  font-family:'Crimson Pro',serif;cursor:pointer;transition:all .2s;
+  border:1px solid transparent;text-transform:uppercase;
+}
+.dtype-btn.normal{border-color:rgba(201,168,76,0.2);color:rgba(201,168,76,0.5);background:none}
+.dtype-btn.normal.active{border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
+.dtype-btn.holiday{border-color:rgba(200,127,42,0.3);color:rgba(200,127,42,0.5);background:none}
+.dtype-btn.holiday.active{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+.dtype-btn.ill{border-color:rgba(90,90,90,0.3);color:rgba(90,90,90,0.6);background:none}
+.dtype-btn.ill.active{border-color:var(--grey);color:#8A8A8A;background:var(--grey-dim)}
+
+/* Day status banner */
+#day-banner{
+  margin:12px 16px 0;border-radius:10px;padding:12px 16px;
+  display:none;align-items:center;gap:10px;
+}
+#day-banner.won{background:rgba(46,125,82,0.12);border:1px solid rgba(46,125,82,0.3)}
+#day-banner.lost{background:var(--red-dim);border:1px solid rgba(192,57,43,0.3)}
+#day-banner.holiday{background:var(--amber-dim);border:1px solid rgba(200,127,42,0.3)}
+#day-banner.ill{background:var(--grey-dim);border:1px solid rgba(90,90,90,0.25)}
+#banner-icon{font-size:1.4rem}
+#banner-text{font-family:'Playfair Display',serif;font-size:0.95rem}
+#day-banner.won #banner-text{color:#4CAF50}
+#day-banner.lost #banner-text{color:#E57373}
+#day-banner.holiday #banner-text{color:var(--amber)}
+#day-banner.ill #banner-text{color:#8A8A8A}
+
+/* Tasks */
+#tasks-section{padding:16px 16px 0}
+#tasks-label{font-size:0.7rem;letter-spacing:3px;text-transform:uppercase;color:rgba(201,168,76,0.35);margin-bottom:12px}
+#task-list{display:flex;flex-direction:column;gap:8px}
+
+.task-item{
+  display:flex;align-items:center;gap:12px;
+  background:var(--ink2);border:1px solid rgba(201,168,76,0.1);
+  border-radius:10px;padding:14px 14px;
+  transition:all .2s;
+}
+.task-item.done{background:rgba(46,125,82,0.08);border-color:rgba(46,125,82,0.25)}
+.task-item.read-only{opacity:0.7}
+.task-check{
+  width:22px;height:22px;border-radius:50%;flex-shrink:0;
+  border:2px solid rgba(201,168,76,0.3);
+  background:none;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;
+}
+.task-check.done{background:var(--green);border-color:var(--green)}
+.task-check.done::after{content:'✓';color:white;font-size:0.75rem;font-weight:700}
+.task-input{
+  flex:1;background:none;border:none;outline:none;
+  font-family:'Crimson Pro',serif;font-size:1rem;color:var(--parchment);
+  line-height:1.3;
+}
+.task-input::placeholder{color:rgba(201,168,76,0.2)}
+.task-input:disabled{color:var(--parchment-dim)}
+.task-input.done-text{text-decoration:line-through;color:rgba(245,237,216,0.4)}
+
+/* Progress bar */
+#progress-bar-wrap{margin:16px 16px 0;height:3px;background:rgba(201,168,76,0.1);border-radius:2px;overflow:hidden}
+#progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));transition:width .4s ease;border-radius:2px}
+
+/* Save / done actions */
+#day-actions{padding:16px 16px 0;display:flex;gap:10px}
+#save-tasks-btn{
+  flex:1;padding:13px;background:var(--gold);border:none;border-radius:10px;
+  font-family:'Playfair Display',serif;font-size:1rem;color:var(--ink);font-weight:700;
+  cursor:pointer;transition:opacity .2s;letter-spacing:1px;
+}
+#save-tasks-btn:disabled{opacity:0.3;cursor:default}
+#mark-done-btn{
+  flex:1;padding:13px;background:rgba(46,125,82,0.15);border:1px solid rgba(46,125,82,0.3);
+  border-radius:10px;font-family:'Playfair Display',serif;font-size:1rem;color:#4CAF50;
+  cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+#mark-done-btn:disabled{opacity:0.3;cursor:default}
+
+/* Footer note */
+#day-footer{
+  margin:20px 16px 0;padding:12px 14px;
+  background:rgba(201,168,76,0.04);border:1px solid rgba(201,168,76,0.08);
+  border-radius:8px;
+  font-size:0.78rem;color:rgba(201,168,76,0.35);line-height:1.6;font-style:italic;
+  letter-spacing:0.5px;
+}
+
+/* ── EXTRAS SECTION ── */
+#extras-section{
+  margin:20px 16px 0;
+  border-top:1px dashed rgba(201,168,76,0.12);
+  padding-top:16px;
+}
+#extras-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;
+}
+#extras-label{
+  font-size:0.68rem;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(201,168,76,0.25);
+}
+#extras-count{
+  font-size:0.7rem;color:rgba(201,168,76,0.25);letter-spacing:1px;
+}
+#extras-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.extra-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  background:rgba(201,168,76,0.03);
+  border:1px solid rgba(201,168,76,0.07);
+  border-radius:8px;transition:all .2s;
+}
+.extra-item.done-extra{opacity:0.45}
+.extra-check{
+  width:18px;height:18px;border-radius:4px;flex-shrink:0;
+  border:1px solid rgba(201,168,76,0.25);background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.extra-check.done{background:rgba(201,168,76,0.2);border-color:rgba(201,168,76,0.4)}
+.extra-check.done::after{content:'✓';font-size:0.65rem;color:var(--gold-dim)}
+.extra-text{
+  flex:1;font-size:0.88rem;color:rgba(245,237,216,0.65);line-height:1.3;
+}
+.extra-text.done-text{text-decoration:line-through;color:rgba(245,237,216,0.25)}
+.extra-rollover{
+  font-size:0.6rem;color:rgba(201,168,76,0.25);letter-spacing:1px;
+  background:rgba(201,168,76,0.06);border-radius:4px;padding:2px 5px;flex-shrink:0;
+}
+.extra-delete{
+  background:none;border:none;color:rgba(201,168,76,0.15);
+  font-size:1rem;cursor:pointer;padding:0 2px;flex-shrink:0;
+  transition:color .2s;
+}
+.extra-delete:active{color:rgba(201,168,76,0.5)}
+#add-extra-row{display:flex;gap:8px;align-items:center}
+#add-extra-input{
+  flex:1;background:rgba(201,168,76,0.04);
+  border:1px solid rgba(201,168,76,0.1);border-radius:8px;
+  padding:9px 12px;color:var(--parchment);
+  font-family:'Crimson Pro',serif;font-size:0.9rem;outline:none;
+}
+#add-extra-input:focus{border-color:rgba(201,168,76,0.25)}
+#add-extra-input::placeholder{color:rgba(201,168,76,0.15)}
+#add-extra-btn{
+  background:none;border:1px solid rgba(201,168,76,0.15);border-radius:8px;
+  padding:9px 14px;color:rgba(201,168,76,0.4);
+  font-size:1rem;cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+#add-extra-btn:active{background:var(--gold-pale);color:var(--gold)}
+
+/* ══════════════════════════════════════
+   CALENDAR VIEW
+══════════════════════════════════════ */
+#view-calendar{padding:16px 16px 80px}
+#cal-month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+#cal-month-nav button{
+  background:none;border:1px solid rgba(201,168,76,0.2);border-radius:8px;
+  width:34px;height:34px;color:var(--gold);font-size:1rem;cursor:pointer;
+}
+#cal-month-label{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--parchment);letter-spacing:1px}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.cal-dow{text-align:center;font-size:0.65rem;letter-spacing:1px;text-transform:uppercase;color:rgba(201,168,76,0.35);padding:4px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-cell{
+  aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:0.8rem;cursor:pointer;position:relative;transition:all .15s;
+  border:1px solid transparent;
+}
+.cal-cell.empty{background:none;cursor:default}
+.cal-cell.normal-pending{background:rgba(201,168,76,0.05);color:rgba(201,168,76,0.3)}
+.cal-cell.won{background:rgba(46,125,82,0.2);border-color:rgba(46,125,82,0.4);color:#6EC98A}
+.cal-cell.lost{background:rgba(192,57,43,0.15);border-color:rgba(192,57,43,0.3);color:#E57373}
+.cal-cell.holiday{background:rgba(200,127,42,0.15);border-color:rgba(200,127,42,0.3);color:var(--amber)}
+.cal-cell.ill{background:rgba(90,90,90,0.12);border-color:rgba(90,90,90,0.25);color:#7A7A7A}
+.cal-cell.future{background:rgba(201,168,76,0.03);color:rgba(201,168,76,0.2);cursor:default}
+.cal-cell.today-marker{border-color:var(--gold)!important}
+.cal-cell.planned{background:rgba(42,106,154,0.15);border-color:rgba(42,106,154,0.3);color:#7AB8D8}
+/* Week row highlight */
+.cal-week-row{display:contents}
+.cal-week-won-bg{
+  grid-column:1/-1;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  border-radius:2px;margin:1px 0;opacity:0.6;
+}
+.week-trophy{position:absolute;top:1px;right:2px;font-size:0.55rem}
+#cal-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:0.72rem;color:rgba(201,168,76,0.4)}
+.leg-dot{width:10px;height:10px;border-radius:3px}
+#cal-footer-note{margin-top:14px;font-size:0.75rem;color:rgba(201,168,76,0.25);font-style:italic;line-height:1.5;text-align:center}
+
+/* ══════════════════════════════════════
+   RECORDS VIEW
+══════════════════════════════════════ */
+#view-records{padding:16px 16px 80px}
+.rec-section{margin-bottom:24px}
+.rec-section-title{
+  font-size:0.68rem;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(201,168,76,0.35);margin-bottom:12px;
+}
+.rec-stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+.rec-stat{
+  background:var(--ink2);border:1px solid rgba(201,168,76,0.1);
+  border-radius:10px;padding:14px;
+}
+.rec-stat-num{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--gold);line-height:1}
+.rec-stat-label{font-size:0.75rem;color:rgba(201,168,76,0.4);margin-top:4px;letter-spacing:0.5px}
+.rec-stat-sub{font-size:0.7rem;color:rgba(201,168,76,0.25);margin-top:2px}
+
+/* Lost days log */
+.lost-day-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;background:var(--ink2);border:1px solid rgba(192,57,43,0.15);
+  border-left:3px solid var(--red);border-radius:0 8px 8px 0;margin-bottom:6px;
+}
+.lost-day-date{font-family:'Playfair Display',serif;font-size:0.9rem;color:#E57373}
+.lost-day-tasks{font-size:0.75rem;color:rgba(245,237,216,0.4);margin-top:2px}
+.lost-day-score{font-size:0.8rem;color:rgba(192,57,43,0.6);letter-spacing:1px}
+
+/* Weeks won log */
+.week-won-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--ink2);border:1px solid rgba(201,168,76,0.1);
+  border-left:3px solid var(--gold-dim);border-radius:0 8px 8px 0;margin-bottom:6px;
+}
+.week-won-label{font-size:0.85rem;color:var(--gold-light)}
+.week-won-meta{font-size:0.72rem;color:rgba(201,168,76,0.35);margin-top:2px}
+
+/* ══════════════════════════════════════
+   CELEBRATIONS
+══════════════════════════════════════ */
+#celebration-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,0.85);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+#celebration-overlay.show{opacity:1;pointer-events:all}
+.celeb-box{
+  text-align:center;padding:40px 32px;max-width:300px;width:90%;
+  background:radial-gradient(ellipse at center,#1E1400 0%,var(--ink) 70%);
+  border-radius:20px;
+}
+.celeb-box.day-win{border:1px solid var(--gold)}
+.celeb-box.week-win{border:2px solid var(--gold-light);box-shadow:0 0 40px rgba(201,168,76,0.2)}
+.celeb-box.month-win{border:2px solid var(--gold-light);box-shadow:0 0 60px rgba(201,168,76,0.3)}
+.celeb-icon{font-size:3rem;margin-bottom:12px;display:block}
+.celeb-title{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gold);margin-bottom:8px}
+.celeb-msg{font-size:0.9rem;color:var(--parchment-dim);line-height:1.6;margin-bottom:20px}
+.celeb-close{
+  background:var(--gold);color:var(--ink);border:none;
+  padding:10px 28px;border-radius:10px;
+  font-family:'Playfair Display',serif;font-size:0.95rem;cursor:pointer;
+}
+#canvas-confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+#toast{
+  position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink2);border:1px solid rgba(201,168,76,0.3);color:var(--gold);
+  padding:10px 20px;border-radius:20px;
+  font-family:'Crimson Pro',serif;font-size:0.9rem;
+  opacity:0;transition:all .3s;pointer-events:none;z-index:600;
+  white-space:nowrap;letter-spacing:0.5px;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── EXPORT/IMPORT ── */
+#ei-btn{background:none;border:none;color:rgba(201,168,76,0.35);font-size:1.1rem;cursor:pointer;padding:4px 8px;transition:color .2s;flex-shrink:0}
+#ei-btn:active{color:var(--gold)}
+#ei-overlay{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.88);display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s}
+#ei-overlay.show{opacity:1;pointer-events:all}
+#ei-box{width:100%;background:#1A1208;border-top:1px solid rgba(201,168,76,0.25);border-radius:20px 20px 0 0;padding:24px 20px 40px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+#ei-overlay.show #ei-box{transform:translateY(0)}
+.ei-title{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--gold,#C9A84C);margin-bottom:6px}
+.ei-sub{font-size:0.78rem;color:rgba(201,168,76,0.4);margin-bottom:18px;line-height:1.5}
+.ei-btn-row{display:flex;gap:10px;margin-bottom:16px}
+.ei-action-btn{flex:1;padding:11px;border-radius:8px;font-family:'Playfair Display',serif;font-size:0.9rem;cursor:pointer;transition:all .2s}
+.ei-export-btn{background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:#FFD55A}
+.ei-import-btn{background:rgba(42,184,100,0.1);border:1px solid rgba(42,184,100,0.3);color:#4CAF50}
+#ei-code-area{width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;color:rgba(245,237,216,0.7);font-family:monospace;font-size:0.72rem;resize:none;outline:none;min-height:80px;line-height:1.4;margin-bottom:10px;word-break:break-all}
+#ei-code-area::placeholder{color:rgba(201,168,76,0.15)}
+.ei-code-action-row{display:flex;gap:8px}
+.ei-copy-btn{flex:1;padding:9px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);border-radius:8px;color:rgba(201,168,76,0.7);font-family:'Crimson Pro',serif;font-size:0.85rem;cursor:pointer}
+.ei-confirm-btn{flex:1;padding:9px;background:rgba(42,184,100,0.15);border:1px solid rgba(42,184,100,0.3);border-radius:8px;color:#4CAF50;font-family:'Crimson Pro',serif;font-size:0.85rem;cursor:pointer;display:none}
+.ei-close-btn{padding:9px 20px;background:none;border:1px solid rgba(201,168,76,0.15);border-radius:8px;color:rgba(201,168,76,0.4);font-family:'Crimson Pro',serif;font-size:0.85rem;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="header-left">
+    <h1>Win The Day</h1>
+    <div id="streak-badge">🔥 <span id="streak-num">0</span></div>
+  </div>
+  <button id="ei-btn" onclick="eiOpen()" title="Backup data">⬆⬇</button>
+  <div id="header-tabs">
+    <button class="htab active" onclick="switchView('day')">Today</button>
+    <button class="htab" onclick="switchView('calendar')">Calendar</button>
+    <button class="htab" onclick="switchView('records')">Records</button>
+  </div>
+</div>
+
+<!-- ── DAY VIEW ── -->
+<div id="view-day">
+  <div id="date-nav">
+    <button class="nav-arrow" id="prev-btn" onclick="navigate(-1)">←</button>
+    <div id="date-display">
+      <div id="date-main-wrap" style="display:flex;align-items:center;justify-content:center;gap:10px">
+        <div id="day-icon" style="flex-shrink:0"></div>
+        <div id="date-main"></div>
+      </div>
+      <div id="date-sub"></div>
+      <button id="today-btn" onclick="goToday()" style="display:none">Back to today</button>
+    </div>
+    <button class="nav-arrow" id="next-btn" onclick="navigate(1)">→</button>
+  </div>
+
+  <div id="day-type-strip" style="display:none">
+    <button class="dtype-btn normal active" onclick="setDayType('normal')">Normal</button>
+    <button class="dtype-btn holiday" onclick="setDayType('holiday')">Holiday</button>
+    <button class="dtype-btn ill" onclick="setDayType('ill')">Ill day</button>
+  </div>
+
+  <div id="day-banner" style="display:none">
+    <span id="banner-icon"></span>
+    <span id="banner-text"></span>
+  </div>
+
+  <div id="tasks-section">
+    <div id="tasks-label">Five tasks</div>
+    <div id="task-list"></div>
+    <div id="progress-bar-wrap"><div id="progress-bar-fill" style="width:0%"></div></div>
+  </div>
+
+  <div id="day-actions">
+    <button id="save-tasks-btn" onclick="saveTasks()">Save tasks</button>
+    <button id="mark-done-btn" onclick="markDone()">Mark complete</button>
+  </div>
+
+  <div id="day-footer">
+    Tasks are done when they're done — before the evening, not at midnight. A day won is a day where all five happened when they were supposed to.
+  </div>
+
+  <!-- EXTRAS -->
+  <div id="extras-section">
+    <div id="extras-header">
+      <div id="extras-label">Also today</div>
+      <div id="extras-count"></div>
+    </div>
+    <div id="extras-list"></div>
+    <div id="add-extra-row">
+      <input id="add-extra-input" type="text" placeholder="Add a task…" maxlength="120"
+        onkeydown="if(event.key==='Enter')addExtra()">
+      <button id="add-extra-btn" onclick="addExtra()">+</button>
+    </div>
+  </div>
+
+  <div id="day-type-toggle-wrap" style="text-align:center;padding:14px 16px 4px">
+    <button id="day-type-toggle-btn" onclick="toggleDayTypeStrip()" style="background:none;border:none;cursor:pointer;font-family:'Crimson Pro',serif;font-size:0.75rem;color:rgba(201,168,76,0.3);letter-spacing:2px;text-transform:uppercase;">
+      <span id="day-type-toggle-label">Mark as holiday or ill day</span>
+    </button>
+  </div>
+
+  <div id="day-type-strip-bottom" style="display:none;padding:0 16px 24px;justify-content:center;gap:8px">
+    <button class="dtype-btn normal active" id="dtype-normal" onclick="setDayType('normal')">Normal</button>
+    <button class="dtype-btn holiday" id="dtype-holiday" onclick="setDayType('holiday')">Holiday</button>
+    <button class="dtype-btn ill" id="dtype-ill" onclick="setDayType('ill')">Ill day</button>
+  </div>
+</div>
+
+<!-- ── CALENDAR VIEW ── -->
+<div id="view-calendar">
+  <div id="cal-month-nav">
+    <button onclick="calNavigate(-1)">←</button>
+    <div id="cal-month-label"></div>
+    <button onclick="calNavigate(1)">→</button>
+  </div>
+  <div class="cal-dow-row">
+    <div class="cal-dow">Mon</div><div class="cal-dow">Tue</div><div class="cal-dow">Wed</div>
+    <div class="cal-dow">Thu</div><div class="cal-dow">Fri</div><div class="cal-dow">Sat</div>
+    <div class="cal-dow">Sun</div>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+  <div id="cal-legend">
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(46,125,82,0.4)"></div>Won</div>
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(192,57,43,0.3)"></div>Lost</div>
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(200,127,42,0.3)"></div>Holiday</div>
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(90,90,90,0.25)"></div>Ill</div>
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(42,106,154,0.3)"></div>Planned</div>
+  </div>
+  <div id="cal-footer-note">Tasks are done before the evening — not at midnight.</div>
+</div>
+
+<!-- ── RECORDS VIEW ── -->
+<div id="view-records">
+  <div class="rec-section">
+    <div class="rec-section-title">Personal bests</div>
+    <div class="rec-stat-grid">
+      <div class="rec-stat">
+        <div class="rec-stat-num" id="rec-streak">0</div>
+        <div class="rec-stat-label">Current streak</div>
+        <div class="rec-stat-sub" id="rec-streak-sub"></div>
+      </div>
+      <div class="rec-stat">
+        <div class="rec-stat-num" id="rec-best-streak">0</div>
+        <div class="rec-stat-label">Best ever streak</div>
+        <div class="rec-stat-sub" id="rec-best-streak-sub"></div>
+      </div>
+      <div class="rec-stat">
+        <div class="rec-stat-num" id="rec-total-won">0</div>
+        <div class="rec-stat-label">Days won total</div>
+        <div class="rec-stat-sub"></div>
+      </div>
+      <div class="rec-stat">
+        <div class="rec-stat-num" id="rec-weeks-won">0</div>
+        <div class="rec-stat-label">Weeks won</div>
+        <div class="rec-stat-sub"></div>
+      </div>
+      <div class="rec-stat">
+        <div class="rec-stat-num" id="rec-total-days">0</div>
+        <div class="rec-stat-label">Days tracked</div>
+        <div class="rec-stat-sub"></div>
+      </div>
+      <div class="rec-stat">
+        <div class="rec-stat-num" id="rec-win-rate">0%</div>
+        <div class="rec-stat-label">Win rate</div>
+        <div class="rec-stat-sub"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rec-section">
+    <div class="rec-section-title">Lost days log</div>
+    <div id="lost-days-list"></div>
+  </div>
+
+  <div class="rec-section">
+    <div class="rec-section-title">Weeks won</div>
+    <div id="weeks-won-list"></div>
+  </div>
+</div>
+
+<!-- ── CELEBRATION ── -->
+<canvas id="canvas-confetti"></canvas>
+<div id="celebration-overlay" onclick="closeCelebration()">
+  <div class="celeb-box" id="celeb-box">
+    <span class="celeb-icon" id="celeb-icon">🏆</span>
+    <div class="celeb-title" id="celeb-title"></div>
+    <div class="celeb-msg" id="celeb-msg"></div>
+    <button class="celeb-close" onclick="closeCelebration()">Let's go</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════
+const KEY = 'wtd_v3';
+function load(){ return JSON.parse(localStorage.getItem(KEY)||'{}'); }
+function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+
+/*
+  data structure:
+  {
+    days: {
+      'YYYY-MM-DD': {
+        type: 'normal'|'holiday'|'ill',
+        tasks: ['task1','task2','task3','task4','task5'],
+        done: [true,false,...],   // null if not yet marked
+        completed: true|false,    // explicitly marked complete
+        won: true|false           // computed
+      }
+    },
+    celebrations: {
+      'week-YYYY-Www': true,      // week celebration fired
+      'month-YYYY-MM': true       // month celebration fired
+    }
+  }
+*/
+
+// ═══════════════════════════════════════════════
+// DATE HELPERS
+// ═══════════════════════════════════════════════
+function dateKey(d){var y=d.getFullYear();var m=String(d.getMonth()+1).padStart(2,"0");var dy=String(d.getDate()).padStart(2,"0");return y+"-"+m+"-"+dy;}
+function today(){ return new Date(); }
+function todayKey(){ return dateKey(today()); }
+function parseKey(k){ const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); }
+function addDays(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);}
+
+function formatDisplay(d){
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return { main: days[d.getDay()]+' '+d.getDate()+' '+months[d.getMonth()], sub: d.getFullYear().toString() };
+}
+
+// Week key: ISO week
+function isoWeek(d){
+  const tmp=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  const dow=tmp.getUTCDay()||7;
+  tmp.setUTCDate(tmp.getUTCDate()+4-dow);
+  const yearStart=new Date(Date.UTC(tmp.getUTCFullYear(),0,1));
+  const wk=Math.ceil((((tmp-yearStart)/86400000)+1)/7);
+  return tmp.getUTCFullYear()+'-W'+String(wk).padStart(2,'0');
+}
+
+// Mon-Sun week containing a date
+function weekBounds(d){
+  const day=d.getDay()||7; // Mon=1..Sun=7
+  const mon=new Date(d); mon.setDate(d.getDate()-(day-1));
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  return {mon,sun};
+}
+
+function monthKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+
+// Days in a Mon-Sun week
+function weekDayKeys(d){
+  const {mon}=weekBounds(d);
+  return Array.from({length:7},(_,i)=>dateKey(addDays(mon,i)));
+}
+
+// Days in a calendar month
+function monthDayKeys(d){
+  const y=d.getFullYear(), m=d.getMonth();
+  const days=new Date(y,m+1,0).getDate();
+  return Array.from({length:days},(_,i)=>dateKey(new Date(y,m,i+1)));
+}
+
+// ═══════════════════════════════════════════════
+// DAY LOGIC
+// ═══════════════════════════════════════════════
+function getDayData(key){
+  const d=load();
+  return d.days?.[key] || {type:'normal',tasks:['','','','',''],done:[false,false,false,false,false],completed:false,won:false};
+}
+
+function isReadOnly(key){
+  // Past days beyond yesterday are read-only
+  const t=todayKey();
+  return key < t; // today and future are editable
+}
+
+function isPast(key){ return key < todayKey(); }
+function isFuture(key){ return key > todayKey(); }
+
+function dayIsWon(dayData){
+  if(dayData.type==='holiday') return true; // holidays count as won
+  if(dayData.type==='ill') return true;     // ill days are neutral (not lost)
+  return dayData.won===true || dayData.completed===true ||
+    (dayData.done && dayData.done.every(Boolean) && dayData.tasks && dayData.tasks.some(t=>t.trim()));
+}
+
+function dayIsLost(dayData, key){
+  if(dayData.type==='holiday'||dayData.type==='ill') return false;
+  if(!isPast(key)) return false; // future/today not lost yet
+  if(dayData.won||dayData.completed) return false;
+  // if tasks were set and not completed
+  const hasTasks = dayData.tasks && dayData.tasks.some(t=>t.trim());
+  if(!hasTasks) return false;
+  return true;
+}
+
+// ═══════════════════════════════════════════════
+// DAY ICONS — custom SVG per weekday
+// ═══════════════════════════════════════════════
+const DAY_ICONS = {
+  1: '📦',
+  2: '🧖',
+  3: '🩼',
+  4: '✈️',
+  5: '⚖️',
+  6: '🏟️',
+  0: '🎾',
+};
+
+// ═══════════════════════════════════════════════
+// DATA MIGRATION — check old keys and import
+// ═══════════════════════════════════════════════
+(function migrate(){
+  const newKey = 'wtd_v3';
+  // If new key already has data, skip
+  const existing = localStorage.getItem(newKey);
+  if(existing && JSON.parse(existing).days && Object.keys(JSON.parse(existing).days).length > 0) return;
+  // Try known old keys
+  const oldKeys = ['wtd_v1','wtd_v2','powerlist_v1','powerlist_v2','wintheday_v1','wintheday','wtd'];
+  for(const k of oldKeys){
+    const old = localStorage.getItem(k);
+    if(old){
+      try{
+        const parsed = JSON.parse(old);
+        // Migrate into new format if it has days data
+        if(parsed.days || parsed.tasks || parsed.log){
+          const migrated = { days: parsed.days || {}, celebrations: parsed.celebrations || {} };
+          localStorage.setItem(newKey, JSON.stringify(migrated));
+          console.log('WTD: migrated data from', k);
+          return;
+        }
+      } catch(e){}
+    }
+  }
+})();
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let currentKey = todayKey();
+let calMonth = new Date();
+
+// ═══════════════════════════════════════════════
+// RENDER DAY
+// ═══════════════════════════════════════════════
+function renderDay(){
+  const d = parseKey(currentKey);
+  const t = todayKey();
+  const fmt = formatDisplay(d);
+  document.getElementById('date-main').textContent = fmt.main;
+  // Day icon
+  const iconEl = document.getElementById('day-icon');
+  if(iconEl){
+    const dow = d.getDay();
+    iconEl.textContent = DAY_ICONS[dow] || '';
+    iconEl.style.fontSize = '1.2rem';
+  }
+  document.getElementById('date-sub').textContent = fmt.sub;
+  document.getElementById('today-btn').style.display = currentKey===t?'none':'block';
+
+  // Nav arrows — prev unlimited, next up to ~2 months ahead
+  const maxFutureKey = dateKey(addDays(today(), 62));
+  document.getElementById('next-btn').disabled = currentKey >= maxFutureKey;
+  document.getElementById('prev-btn').disabled = false; // unlimited back
+
+  const dayData = getDayData(currentKey);
+  const readOnly = isReadOnly(currentKey);
+  const isTodayOrFuture = currentKey >= t;
+
+  // Day type buttons
+  updateDayTypeUI(dayData.type||'normal');
+  // Disable type change for past days
+  ['normal','holiday','ill'].forEach(t=>{
+    const btn=document.getElementById('dtype-'+t);
+    if(btn) btn.disabled=readOnly;
+  });
+  const toggleBtn=document.getElementById('day-type-toggle-btn');
+  if(toggleBtn) toggleBtn.disabled=readOnly;
+
+  // Banner
+  const banner = document.getElementById('day-banner');
+  const won = dayIsWon(dayData);
+  const lost = dayIsLost(dayData, currentKey);
+
+  banner.className=''; banner.style.display='none';
+  if(dayData.type==='ill'){
+    banner.className='ill'; banner.style.display='flex';
+    document.getElementById('banner-icon').textContent='🤒';
+    document.getElementById('banner-text').textContent='Ill day — no loss, no streak break';
+  } else if(dayData.type==='holiday'){
+    banner.className='holiday'; banner.style.display='flex';
+    document.getElementById('banner-icon').textContent='🌴';
+    document.getElementById('banner-text').textContent='Holiday — enjoy it';
+  } else if(won && isPast(currentKey)){
+    banner.className='won'; banner.style.display='flex';
+    document.getElementById('banner-icon').textContent='✓';
+    document.getElementById('banner-text').textContent='Day won';
+  } else if(lost){
+    banner.className='lost'; banner.style.display='flex';
+    document.getElementById('banner-icon').textContent='✗';
+    document.getElementById('banner-text').textContent='Day lost';
+  }
+
+  // Tasks
+  const taskList = document.getElementById('task-list');
+  taskList.innerHTML = '';
+  const tasks = dayData.tasks || ['','','','',''];
+  const done = dayData.done || [false,false,false,false,false];
+  const isIllOrHoliday = dayData.type==='ill'||dayData.type==='holiday';
+  const isFutureDay = isFuture(currentKey);
+
+  for(let i=0;i<5;i++){
+    const item = document.createElement('div');
+    item.className = 'task-item'+(done[i]?' done':'')+(readOnly?' read-only':'');
+
+    const check = document.createElement('button');
+    check.className = 'task-check'+(done[i]?' done':'');
+    check.disabled = readOnly || isIllOrHoliday || isFutureDay;
+    check.onclick = ()=>toggleTaskDone(i);
+
+    const input = document.createElement('input');
+    input.className = 'task-input'+(done[i]?' done-text':'');
+    input.type='text';
+    input.value = tasks[i]||'';
+    input.placeholder = 'Task '+(i+1);
+    input.disabled = readOnly || isIllOrHoliday;
+    input.dataset.idx = i;
+    input.oninput = ()=>onTaskInput();
+
+    item.appendChild(check);
+    item.appendChild(input);
+    taskList.appendChild(item);
+  }
+
+  // Progress bar
+  const doneCount = done.filter(Boolean).length;
+  const hasTasks = tasks.some(t=>t.trim());
+  document.getElementById('progress-bar-fill').style.width = hasTasks ? (doneCount/5*100)+'%' : '0%';
+
+  // Actions
+  const saveBtn = document.getElementById('save-tasks-btn');
+  const doneBtn = document.getElementById('mark-done-btn');
+  saveBtn.style.display = readOnly||isIllOrHoliday ? 'none' : 'block';
+  doneBtn.style.display = (readOnly||isIllOrHoliday||isFutureDay) ? 'none' : 'block';
+  saveBtn.disabled = isIllOrHoliday;
+  doneBtn.disabled = won;
+  if(won && !isIllOrHoliday){
+    doneBtn.textContent='✓ Complete';
+    doneBtn.style.opacity='0.5';
+  } else {
+    doneBtn.textContent='Mark complete';
+    doneBtn.style.opacity='1';
+  }
+
+  // Label
+  document.getElementById('tasks-label').textContent =
+    isFutureDay ? 'Plan ahead — set your five tasks' :
+    readOnly ? 'Five tasks' : 'Five tasks — set for tomorrow or today';
+
+  updateStreak();
+  renderExtras();
+}
+
+function toggleDayTypeStrip(){
+  const strip = document.getElementById('day-type-strip-bottom');
+  const showing = strip.style.display==='flex';
+  strip.style.display = showing ? 'none' : 'flex';
+  document.getElementById('day-type-toggle-btn').style.color = showing ? 'rgba(201,168,76,0.3)' : 'rgba(201,168,76,0.6)';
+}
+
+function updateDayTypeUI(type){
+  ['normal','holiday','ill'].forEach(t=>{
+    const btn = document.getElementById('dtype-'+t);
+    if(btn) btn.classList.toggle('active', t===type);
+  });
+  // Update toggle label
+  const lbl = document.getElementById('day-type-toggle-label');
+  if(type==='holiday') lbl.textContent = '🌴 Holiday day — tap to change';
+  else if(type==='ill') lbl.textContent = '🤒 Ill day — tap to change';
+  else lbl.textContent = 'Mark as holiday or ill day';
+
+  // If holiday or ill, keep strip visible so it's obvious
+  if(type==='holiday'||type==='ill'){
+    document.getElementById('day-type-strip-bottom').style.display='flex';
+  }
+}
+
+function onTaskInput(){
+  document.getElementById('save-tasks-btn').disabled = false;
+}
+
+// ═══════════════════════════════════════════════
+// TASK ACTIONS
+// ═══════════════════════════════════════════════
+function saveTasks(){
+  const inputs = document.querySelectorAll('.task-input');
+  const tasks = Array.from(inputs).map(i=>i.value.trim());
+  const d = load();
+  if(!d.days) d.days={};
+  if(!d.days[currentKey]) d.days[currentKey]={type:'normal',tasks:[],done:[false,false,false,false,false],completed:false,won:false};
+  d.days[currentKey].tasks = tasks;
+  save(d);
+  showToast('Tasks saved');
+  renderDay();
+}
+
+function toggleTaskDone(idx){
+  const d = load();
+  if(!d.days) d.days={};
+  if(!d.days[currentKey]) d.days[currentKey]={type:'normal',tasks:['','','','',''],done:[false,false,false,false,false],completed:false,won:false};
+  d.days[currentKey].done[idx] = !d.days[currentKey].done[idx];
+  save(d);
+  renderDay();
+}
+
+function markDone(){
+  const d = load();
+  if(!d.days) d.days={};
+  if(!d.days[currentKey]) d.days[currentKey]={type:'normal',tasks:['','','','',''],done:[false,false,false,false,false],completed:false,won:false};
+  // save current task inputs first
+  const inputs = document.querySelectorAll('.task-input');
+  const tasks = Array.from(inputs).map(i=>i.value.trim());
+  d.days[currentKey].tasks = tasks;
+  d.days[currentKey].done = [true,true,true,true,true];
+  d.days[currentKey].won = true;
+  d.days[currentKey].completed = true;
+  save(d);
+  renderDay();
+
+  // Trigger celebrations
+  triggerCelebrations();
+}
+
+function setDayType(type){
+  const d = load();
+  if(!d.days) d.days={};
+  if(!d.days[currentKey]) d.days[currentKey]={type:'normal',tasks:['','','','',''],done:[false,false,false,false,false],completed:false,won:false};
+  d.days[currentKey].type = type;
+  save(d);
+  renderDay();
+  renderCalendar();
+}
+
+// ═══════════════════════════════════════════════
+// CELEBRATIONS
+// ═══════════════════════════════════════════════
+function triggerCelebrations(){
+  const d = load();
+  const dayData = d.days?.[currentKey];
+  if(!dayData?.won) return;
+
+  // Check for month win first (bigger), then week win, then day win
+  const mk = 'month-'+monthKey(parseKey(currentKey));
+  const wk = 'week-'+isoWeek(parseKey(currentKey));
+  if(!d.celebrations) d.celebrations={};
+
+  const mKeys = monthDayKeys(parseKey(currentKey));
+  const allMonthWon = mKeys.every(k=>{
+    const dd = d.days?.[k];
+    if(!dd) return false;
+    return dayIsWon(dd);
+  });
+
+  const wKeys = weekDayKeys(parseKey(currentKey));
+  const allWeekWon = wKeys.every(k=>{
+    const dd = d.days?.[k];
+    if(!dd) return false;
+    return dayIsWon(dd);
+  });
+
+  if(allMonthWon && !d.celebrations[mk]){
+    d.celebrations[mk]=true; save(d);
+    setTimeout(()=>showCelebration('perfect-month'), 400);
+  } else if(allWeekWon && !d.celebrations[wk]){
+    d.celebrations[wk]=true; save(d);
+    setTimeout(()=>showCelebration('week'), 400);
+  } else {
+    setTimeout(()=>showCelebration('day'), 300);
+  }
+}
+
+const CELEBRATIONS = {
+  'day':{
+    icon:'⚡', title:'Day won.',
+    msg:'One more. Stack them up.',
+    type:'day-win', confetti:'gold'
+  },
+  'week':{
+    icon:'🔥', title:'Week won.',
+    msg:'Seven days. Every single one. That\'s not luck.',
+    type:'week-win', confetti:'silver-gold'
+  },
+  'month':{
+    icon:'🏆', title:'Month won.',
+    msg:'You said you would and you did. Every day this month.',
+    type:'month-win', confetti:'big'
+  },
+  'perfect-month':{
+    icon:'👑', title:'Perfect month.',
+    msg:'Not one day lost. Not one. This is who you are now.',
+    type:'month-win', confetti:'epic'
+  }
+};
+
+function showCelebration(type){
+  const c = CELEBRATIONS[type];
+  document.getElementById('celeb-icon').textContent = c.icon;
+  document.getElementById('celeb-title').textContent = c.title;
+  document.getElementById('celeb-msg').textContent = c.msg;
+  document.getElementById('celeb-box').className = 'celeb-box '+c.type;
+  document.getElementById('celebration-overlay').classList.add('show');
+  launchConfetti(c.confetti);
+}
+
+function closeCelebration(){
+  document.getElementById('celebration-overlay').classList.remove('show');
+}
+
+// ── CONFETTI ──
+function launchConfetti(type){
+  const canvas = document.getElementById('canvas-confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const count = type==='epic'?200:type==='big'?140:type==='silver-gold'?100:60;
+  const palettes = {
+    'gold':['#C9A84C','#E8C97A','#FFE080','#8B6914'],
+    'silver-gold':['#C9A84C','#E8E8E8','#C0C0C0','#FFE080','#AAAAAA'],
+    'big':['#C9A84C','#E8C97A','#FFE080','#ffffff','#8B6914'],
+    'epic':['#C9A84C','#E8C97A','#FFE080','#ffffff','#FF6B6B','#4CAF50','#2196F3']
+  };
+  const colors = palettes[type]||palettes['gold'];
+  const particles = Array.from({length:count},()=>({
+    x:Math.random()*canvas.width, y:-10,
+    vx:(Math.random()-0.5)*4, vy:2+Math.random()*4,
+    r:4+Math.random()*6,
+    color:colors[Math.floor(Math.random()*colors.length)],
+    rot:Math.random()*360, rotv:(Math.random()-0.5)*8,
+    alpha:1
+  }));
+
+  let frame;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive=false;
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.1; p.rot+=p.rotv;
+      if(p.y>canvas.height) p.alpha-=0.05;
+      if(p.alpha>0){ alive=true; }
+      ctx.save();
+      ctx.globalAlpha=Math.max(0,p.alpha);
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle=p.color;
+      ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r/2);
+      ctx.restore();
+    });
+    if(alive) frame=requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  cancelAnimationFrame(frame);
+  draw();
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function navigate(dir){
+  const d = parseKey(currentKey);
+  const next = addDays(d, dir);
+  const maxFutureKey = dateKey(addDays(today(), 62));
+  const nextKey = dateKey(next);
+  if(nextKey > maxFutureKey) return;
+  currentKey = nextKey;
+  renderDay();
+}
+
+function goToday(){
+  currentKey = todayKey();
+  renderDay();
+}
+
+// ═══════════════════════════════════════════════
+// STREAK
+// ═══════════════════════════════════════════════
+function calcStreak(){
+  const d = load();
+  const days = d.days||{};
+  const t = todayKey();
+
+  // Walk back from yesterday (today not yet complete)
+  let streak=0;
+  let check = addDays(today(),-1);
+
+  while(true){
+    const k = dateKey(check);
+    const dd = days[k];
+    if(!dd) break;
+    if(dd.type==='ill'){check=addDays(check,-1);continue;} // ill = skip, don't break
+    if(dayIsWon(dd)){streak++;check=addDays(check,-1);}
+    else break;
+  }
+  // Also count today if won
+  const todayData = days[t];
+  if(todayData && dayIsWon(todayData) && todayData.type!=='ill') streak++;
+
+  return streak;
+}
+
+function calcBestStreak(){
+  const d = load();
+  const days = d.days||{};
+  const keys = Object.keys(days).sort();
+  if(!keys.length) return {streak:0,start:'',end:''};
+
+  let best=0, cur=0, bestStart='', bestEnd='', curStart='';
+  let prev = null;
+
+  keys.forEach(k=>{
+    const dd = days[k];
+    if(dd.type==='ill'){prev=k;return;}
+    if(dayIsWon(dd)){
+      if(cur===0) curStart=k;
+      cur++;
+      if(cur>best){best=cur;bestStart=curStart;bestEnd=k;}
+    } else if(dayIsLost(dd,k)){
+      cur=0;curStart='';
+    }
+    prev=k;
+  });
+  return {streak:best,start:bestStart,end:bestEnd};
+}
+
+function updateStreak(){
+  const s = calcStreak();
+  document.getElementById('streak-num').textContent = s;
+}
+
+// ═══════════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════════
+function renderCalendar(){
+  const d = load();
+  const days = d.days||{};
+  const t = todayKey();
+  const y = calMonth.getFullYear(), m = calMonth.getMonth();
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-label').textContent = months[m]+' '+y;
+
+  const firstDay = new Date(y,m,1);
+  const lastDay = new Date(y,m+1,0);
+  const startDow = (firstDay.getDay()||7)-1; // 0=Mon
+  const totalDays = lastDay.getDate();
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML='';
+
+  // Blank cells
+  for(let i=0;i<startDow;i++){
+    const c=document.createElement('div'); c.className='cal-cell empty'; grid.appendChild(c);
+  }
+
+  for(let day=1;day<=totalDays;day++){
+    const k = dateKey(new Date(y,m,day));
+    const dd = days[k];
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell';
+
+    if(k===t) cell.classList.add('today-marker');
+
+    if(!dd || k>t){
+      // future or no data
+      if(k>t && dd && dd.tasks && dd.tasks.some(t=>t.trim())){
+        cell.classList.add('planned');
+      } else if(k>t){
+        cell.classList.add('future');
+      } else {
+        cell.classList.add('normal-pending');
+      }
+    } else if(dd.type==='ill'){
+      cell.classList.add('ill');
+    } else if(dd.type==='holiday'){
+      cell.classList.add('holiday');
+    } else if(dayIsWon(dd)){
+      cell.classList.add('won');
+    } else if(dayIsLost(dd,k)){
+      cell.classList.add('lost');
+    } else {
+      cell.classList.add('normal-pending');
+    }
+
+    cell.textContent = day;
+
+    // Week won trophy on Sunday
+    const cellDate = new Date(y,m,day);
+    if(cellDate.getDay()===0){ // Sunday
+      const wk = 'week-'+isoWeek(cellDate);
+      if(d.celebrations?.[wk]){
+        const trophy=document.createElement('span');
+        trophy.className='week-trophy'; trophy.textContent='🏆';
+        cell.appendChild(trophy);
+      }
+    }
+
+    cell.onclick = ()=>{ currentKey=k; switchView('day'); };
+    grid.appendChild(cell);
+  }
+}
+
+function calNavigate(dir){
+  calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()+dir, 1);
+  renderCalendar();
+}
+
+// ═══════════════════════════════════════════════
+// RECORDS
+// ═══════════════════════════════════════════════
+function renderRecords(){
+  const d = load();
+  const days = d.days||{};
+  const keys = Object.keys(days).sort();
+
+  const streak = calcStreak();
+  const best = calcBestStreak();
+  const totalWon = keys.filter(k=>dayIsWon(days[k]) && days[k].type!=='ill' && days[k].type!=='holiday').length;
+  const totalLost = keys.filter(k=>dayIsLost(days[k],k)).length;
+  const totalTracked = keys.filter(k=>days[k].type!=='ill').length;
+  const winRate = totalTracked>0 ? Math.round(totalWon/totalTracked*100) : 0;
+  const weeksWon = Object.keys(d.celebrations||{}).filter(k=>k.startsWith('week-')).length;
+
+  document.getElementById('rec-streak').textContent = streak;
+  document.getElementById('rec-streak-sub').textContent = streak>0?'days in a row':'';
+  document.getElementById('rec-best-streak').textContent = best.streak;
+  document.getElementById('rec-best-streak-sub').textContent = best.streak>0?formatShortDate(best.start)+' → '+formatShortDate(best.end):'';
+  document.getElementById('rec-total-won').textContent = totalWon;
+  document.getElementById('rec-weeks-won').textContent = weeksWon;
+  document.getElementById('rec-total-days').textContent = totalTracked;
+  document.getElementById('rec-win-rate').textContent = winRate+'%';
+
+  // Lost days
+  const lostList = document.getElementById('lost-days-list');
+  const lostKeys = keys.filter(k=>dayIsLost(days[k],k)).reverse();
+  if(lostKeys.length===0){
+    lostList.innerHTML='<div style="font-size:0.85rem;color:rgba(201,168,76,0.3);padding:8px 0;font-style:italic">No lost days recorded yet.</div>';
+  } else {
+    lostList.innerHTML = lostKeys.map(k=>{
+      const dd = days[k];
+      const tasks = dd.tasks||[];
+      const doneCount = (dd.done||[]).filter(Boolean).length;
+      const hasTasks = tasks.some(t=>t.trim());
+      const d2 = parseKey(k);
+      const dayName = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d2.getDay()];
+      return `<div class="lost-day-item">
+        <div>
+          <div class="lost-day-date">${dayName} ${d2.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d2.getMonth()]} ${d2.getFullYear()}</div>
+          <div class="lost-day-tasks">${hasTasks?tasks.filter(t=>t.trim()).join(' · '):'No tasks set'}</div>
+        </div>
+        <div class="lost-day-score">${hasTasks?doneCount+'/5':''}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Weeks won
+  const wwList = document.getElementById('weeks-won-list');
+  const wwKeys = Object.keys(d.celebrations||{}).filter(k=>k.startsWith('week-')).sort().reverse();
+  if(wwKeys.length===0){
+    wwList.innerHTML='<div style="font-size:0.85rem;color:rgba(201,168,76,0.3);padding:8px 0;font-style:italic">No weeks won yet — first one is coming.</div>';
+  } else {
+    wwList.innerHTML = wwKeys.map((k,i)=>{
+      return `<div class="week-won-item">
+        <div>
+          <div class="week-won-label">🏆 Week ${wwKeys.length-i}</div>
+          <div class="week-won-meta">${k.replace('week-','')}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function formatShortDate(k){
+  if(!k) return '';
+  const d = parseKey(k);
+  return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+}
+
+// ═══════════════════════════════════════════════
+// VIEW SWITCHING
+// ═══════════════════════════════════════════════
+function switchView(v){
+  ['day','calendar','records'].forEach(name=>{
+    document.getElementById('view-'+name).style.display = name===v?'block':'none';
+  });
+  document.querySelectorAll('.htab').forEach(b=>{
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(v==='day'?'today':v));
+  });
+  if(v==='calendar') renderCalendar();
+  if(v==='records') renderRecords();
+  if(v==='day') renderDay();
+}
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+// ═══════════════════════════════════════════════
+// EXTRAS — roll-over task list
+// ═══════════════════════════════════════════════
+/*
+  Extras stored globally (not per-day):
+  data.extras = [
+    { id: 123456, text: 'Call the dentist', done: false, created: 'YYYY-MM-DD' }
+  ]
+  Completed extras persist until manually deleted.
+  Undone extras always show — they roll over automatically.
+*/
+
+function getExtras(){
+  const d = load();
+  return d.extras || [];
+}
+
+function saveExtras(extras){
+  const d = load();
+  d.extras = extras;
+  save(d);
+}
+
+function addExtra(){
+  const input = document.getElementById('add-extra-input');
+  const text = input.value.trim();
+  if(!text) return;
+  const extras = getExtras();
+  extras.push({ id: Date.now(), text, done: false, created: currentKey });
+  saveExtras(extras);
+  input.value = '';
+  renderExtras();
+}
+
+function toggleExtra(id){
+  const extras = getExtras();
+  const item = extras.find(e=>e.id===id);
+  if(item) item.done = !item.done;
+  saveExtras(extras);
+  renderExtras();
+}
+
+function deleteExtra(id){
+  const extras = getExtras().filter(e=>e.id!==id);
+  saveExtras(extras);
+  renderExtras();
+}
+
+function renderExtras(){
+  const extras = getExtras();
+  const list = document.getElementById('extras-list');
+  const countEl = document.getElementById('extras-count');
+  const isPastDay = isReadOnly(currentKey);
+
+  // Sort: undone first, then done
+  const sorted = [...extras.filter(e=>!e.done), ...extras.filter(e=>e.done)];
+
+  const undoneCount = extras.filter(e=>!e.done).length;
+  countEl.textContent = undoneCount > 0 ? undoneCount+' remaining' : extras.length > 0 ? 'all done' : '';
+
+  if(sorted.length === 0){
+    list.innerHTML = '';
+    return;
+  }
+
+  list.innerHTML = sorted.map(item=>{
+    const isRollover = item.created < currentKey && !item.done;
+    return `<div class="extra-item${item.done?' done-extra':''}">
+      <button class="extra-check${item.done?' done':''}" onclick="toggleExtra(${item.id})"></button>
+      <div class="extra-text${item.done?' done-text':''}">${item.text}</div>
+      ${isRollover ? '<span class="extra-rollover">rolled over</span>' : ''}
+      <button class="extra-delete" onclick="deleteExtra(${item.id})">×</button>
+    </div>`;
+  }).join('');
+
+  // Hide add row on past read-only days
+  document.getElementById('add-extra-row').style.display = isPastDay ? 'none' : 'flex';
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+switchView('day');
+
+// ═══════════════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════════════
+const EI_KEYS = ['wtd_v3','wtd_extras'];
+
+function eiOpen(){{
+  document.getElementById('ei-code-area').value='';
+  document.getElementById('ei-copy-btn').style.display='block';
+  document.getElementById('ei-confirm-btn').style.display='none';
+  document.getElementById('ei-overlay').classList.add('show');
+}}
+function eiClose(){{document.getElementById('ei-overlay').classList.remove('show')}}
+
+function eiExport(){{
+  const data={};
+  EI_KEYS.forEach(k=>{{const v=localStorage.getItem(k);if(v)data[k]=v;}});
+  const code=btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  document.getElementById('ei-code-area').value=code;
+  document.getElementById('ei-copy-btn').style.display='block';
+  document.getElementById('ei-confirm-btn').style.display='none';
+}}
+
+function eiImportMode(){{
+  document.getElementById('ei-code-area').value='';
+  document.getElementById('ei-code-area').placeholder='Paste your backup code here...';
+  document.getElementById('ei-copy-btn').style.display='none';
+  document.getElementById('ei-confirm-btn').style.display='block';
+}}
+
+function eiCopy(){{
+  const code=document.getElementById('ei-code-area').value;
+  if(!code)return;
+  navigator.clipboard.writeText(code).then(()=>{{
+    document.getElementById('ei-copy-btn').textContent='Copied ✓';
+    setTimeout(()=>document.getElementById('ei-copy-btn').textContent='Copy code',2000);
+  }}).catch(()=>{{
+    document.getElementById('ei-code-area').select();
+    document.execCommand('copy');
+  }});
+}}
+
+function eiConfirmImport(){{
+  const code=document.getElementById('ei-code-area').value.trim();
+  if(!code)return;
+  try{{
+    const data=JSON.parse(decodeURIComponent(escape(atob(code))));
+    Object.entries(data).forEach(([k,v])=>localStorage.setItem(k,v));
+    eiClose();
+    setTimeout(()=>location.reload(),300);
+  }}catch(e){{
+    alert('Invalid backup code — please check and try again');
+  }}
+}}
+</script>
+<!-- EXPORT/IMPORT -->
+<div id="ei-overlay" onclick="eiClose()">
+  <div id="ei-box" onclick="event.stopPropagation()">
+    <div class="ei-title">Data backup</div>
+    <div class="ei-sub">Export your data as a code to back it up or move it to a new URL. Import to restore.</div>
+    <div class="ei-btn-row">
+      <button class="ei-action-btn ei-export-btn" onclick="eiExport()">⬆ Export</button>
+      <button class="ei-action-btn ei-import-btn" onclick="eiImportMode()">⬇ Import</button>
+    </div>
+    <textarea id="ei-code-area" placeholder="Your backup code will appear here after export. Or paste an import code here."></textarea>
+    <div class="ei-code-action-row">
+      <button class="ei-copy-btn" id="ei-copy-btn" onclick="eiCopy()">Copy code</button>
+      <button class="ei-confirm-btn" id="ei-confirm-btn" onclick="eiConfirmImport()">Restore data</button>
+      <button class="ei-close-btn" onclick="eiClose()">Close</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
