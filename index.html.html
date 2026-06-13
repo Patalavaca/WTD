@@ -739,12 +739,13 @@ function renderDay(){
   // Day type buttons
   updateDayTypeUI(dayData.type||'normal');
   // Disable type change for past days
+  // Day type can always be changed, even on past days - lets you correct a day marked as lost in error
   ['normal','holiday','ill'].forEach(dtype=>{
     const btn=document.getElementById('dtype-'+dtype);
-    if(btn) btn.disabled=readOnly;
+    if(btn) btn.disabled=false;
   });
   const toggleBtn=document.getElementById('day-type-toggle-btn');
-  if(toggleBtn) toggleBtn.disabled=readOnly;
+  if(toggleBtn) toggleBtn.disabled=false;
 
   // Banner
   const banner = document.getElementById('day-banner');
@@ -780,11 +781,11 @@ function renderDay(){
 
   for(let i=0;i<5;i++){
     const item = document.createElement('div');
-    item.className = 'task-item'+(done[i]?' done':'')+(readOnly?' read-only':'');
+    item.className = 'task-item'+(done[i]?' done':'');
 
     const check = document.createElement('button');
     check.className = 'task-check'+(done[i]?' done':'');
-    check.disabled = readOnly || isIllOrHoliday || isFutureDay;
+    check.disabled = isIllOrHoliday || isFutureDay;
     check.onclick = ()=>toggleTaskDone(i);
 
     const input = document.createElement('input');
@@ -792,7 +793,7 @@ function renderDay(){
     input.type='text';
     input.value = tasks[i]||'';
     input.placeholder = 'Task '+(i+1);
-    input.disabled = readOnly || isIllOrHoliday;
+    input.disabled = isIllOrHoliday;
     input.dataset.idx = i;
     input.oninput = ()=>onTaskInput();
 
@@ -809,8 +810,8 @@ function renderDay(){
   // Actions
   const saveBtn = document.getElementById('save-tasks-btn');
   const doneBtn = document.getElementById('mark-done-btn');
-  saveBtn.style.display = readOnly||isIllOrHoliday ? 'none' : 'block';
-  doneBtn.style.display = (readOnly||isIllOrHoliday||isFutureDay) ? 'none' : 'block';
+  saveBtn.style.display = isIllOrHoliday ? 'none' : 'block';
+  doneBtn.style.display = (isIllOrHoliday||isFutureDay) ? 'none' : 'block';
   saveBtn.disabled = isIllOrHoliday;
   doneBtn.disabled = won;
   if(won && !isIllOrHoliday){
@@ -824,7 +825,7 @@ function renderDay(){
   // Label
   document.getElementById('tasks-label').textContent =
     isFutureDay ? 'Plan ahead — set your five tasks' :
-    readOnly ? 'Five tasks' : 'Five tasks — set for tomorrow or today';
+    isPast(currentKey) ? 'Five tasks — edit if needed' : 'Five tasks — set for tomorrow or today';
 
   updateStreak();
   renderExtras();
