@@ -25,7 +25,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --gold:#FFD55A;--gold-light:#FFE588;--gold-dim:#D4B040;--gold-pale:rgba(255,213,90,0.14);
+  --gold:#FFE680;--gold-light:#FFF0A0;--gold-dim:#FFDA50;--gold-pale:rgba(255,230,128,0.16);
   --ink:#0D0A04;--ink2:#1A1208;--ink3:#252010;
   --parchment:#F5EDD8;--parchment-dim:rgba(245,237,216,0.88);
   --red:#C0392B;--red-dim:rgba(192,57,43,0.15);
@@ -129,32 +129,38 @@ html,body{height:100%;background:var(--ink);font-family:'Crimson Pro',serif;over
 #day-banner.ill #banner-text{color:#8A8A8A}
 
 /* Tasks */
-#tasks-section{padding:16px 16px 0}
-#tasks-label{font-size:0.7rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,213,90,0.6);margin-bottom:12px}
+#tasks-section{padding:16px 16px 0;position:relative;z-index:5}
+#tasks-label{font-size:0.7rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,230,128,0.7);margin-bottom:12px}
 #task-list{display:flex;flex-direction:column;gap:8px}
 
 .task-item{
   display:flex;align-items:center;gap:12px;
-  background:var(--ink2);border:1px solid rgba(201,168,76,0.1);
+  background:var(--ink2);border:1px solid rgba(255,230,128,0.15);
   border-radius:10px;padding:14px 14px;
-  transition:all .2s;
+  transition:all .2s;position:relative;z-index:5;
 }
 .task-item.done{background:rgba(46,125,82,0.08);border-color:rgba(46,125,82,0.25)}
 .task-item.read-only{opacity:0.7}
 .task-check{
-  width:22px;height:22px;border-radius:50%;flex-shrink:0;
-  border:2px solid rgba(255,213,90,0.55);
+  width:44px;height:44px;border-radius:50%;flex-shrink:0;
+  border:2px solid rgba(255,230,128,0.6);
   background:none;cursor:pointer;transition:all .2s;
   display:flex;align-items:center;justify-content:center;
+  pointer-events:auto;touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+  position:relative;z-index:10;
 }
 .task-check.done{background:var(--green);border-color:var(--green)}
-.task-check.done::after{content:'✓';color:white;font-size:0.75rem;font-weight:700}
+.task-check.done::after{content:'✓';color:white;font-size:0.9rem;font-weight:700}
 .task-input{
   flex:1;background:none;border:none;outline:none;
-  font-family:'Crimson Pro',serif;font-size:1rem;color:var(--parchment);
-  line-height:1.3;
+  font-family:'Crimson Pro',serif;font-size:1.05rem;color:var(--parchment);
+  line-height:1.3;min-height:44px;padding:8px 4px;
+  pointer-events:auto;touch-action:manipulation;
+  -webkit-user-select:text;user-select:text;
+  position:relative;z-index:10;
 }
-.task-input::placeholder{color:rgba(255,213,90,0.45)}
+.task-input::placeholder{color:rgba(255,230,128,0.5)}
 .task-input:disabled{color:var(--parchment-dim)}
 .task-input.done-text{text-decoration:line-through;color:rgba(245,237,216,0.75)}
 
@@ -163,7 +169,7 @@ html,body{height:100%;background:var(--ink);font-family:'Crimson Pro',serif;over
 #progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));transition:width .4s ease;border-radius:2px}
 
 /* Save / done actions */
-#day-actions{padding:16px 16px 0;display:flex;gap:10px}
+#day-actions{padding:16px 16px 0;display:flex;gap:10px;position:relative;z-index:5}
 #save-tasks-btn{
   flex:1;padding:13px;background:var(--gold);border:none;border-radius:10px;
   font-family:'Playfair Display',serif;font-size:1rem;color:var(--ink);font-weight:700;
@@ -638,9 +644,7 @@ function getDayData(key){
 }
 
 function isReadOnly(key){
-  // Past days beyond yesterday are read-only
-  const t=todayKey();
-  return key < t; // today and future are editable
+  return false; // ALL days are editable — past, present, future
 }
 
 function isPast(key){ return key < todayKey(); }
@@ -785,7 +789,7 @@ function renderDay(){
 
     const check = document.createElement('button');
     check.className = 'task-check'+(done[i]?' done':'');
-    check.disabled = isIllOrHoliday || isFutureDay;
+    check.disabled = false;
     check.onclick = ()=>toggleTaskDone(i);
 
     const input = document.createElement('input');
@@ -793,7 +797,7 @@ function renderDay(){
     input.type='text';
     input.value = tasks[i]||'';
     input.placeholder = 'Task '+(i+1);
-    input.disabled = isIllOrHoliday;
+    input.disabled = false;
     input.dataset.idx = i;
     input.oninput = ()=>onTaskInput();
 
@@ -807,14 +811,14 @@ function renderDay(){
   const hasTasks = tasks.some(t=>t.trim());
   document.getElementById('progress-bar-fill').style.width = hasTasks ? (doneCount/5*100)+'%' : '0%';
 
-  // Actions
+  // Actions — always visible and enabled
   const saveBtn = document.getElementById('save-tasks-btn');
   const doneBtn = document.getElementById('mark-done-btn');
-  saveBtn.style.display = isIllOrHoliday ? 'none' : 'block';
-  doneBtn.style.display = (isIllOrHoliday||isFutureDay) ? 'none' : 'block';
-  saveBtn.disabled = isIllOrHoliday;
-  doneBtn.disabled = won;
-  if(won && !isIllOrHoliday){
+  saveBtn.style.display = 'block';
+  doneBtn.style.display = 'block';
+  saveBtn.disabled = false;
+  doneBtn.disabled = false;
+  if(won){
     doneBtn.textContent='✓ Complete';
     doneBtn.style.opacity='0.5';
   } else {
@@ -1355,8 +1359,8 @@ function renderExtras(){
     </div>`;
   }).join('');
 
-  // Hide add row on past read-only days
-  document.getElementById('add-extra-row').style.display = isPastDay ? 'none' : 'flex';
+  // Always show add row
+  document.getElementById('add-extra-row').style.display = 'flex';
 }
 
 // ═══════════════════════════════════════════════
