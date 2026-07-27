@@ -192,6 +192,15 @@ html,body{height:100%;background:var(--ink);font-family:'Crimson Pro',serif;over
   letter-spacing:0.5px;
 }
 
+/* ── DAILY HABITS ── */
+#habits-section{padding:0 16px 8px}
+#habits-label{font-family:'Crimson Pro',serif;font-size:0.75rem;color:rgba(255,213,90,0.55);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.habit-item{display:flex;align-items:center;gap:10px;padding:7px 0}
+.habit-check{width:22px;height:22px;border-radius:6px;border:2px solid rgba(94,234,212,0.35);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s}
+.habit-check.done{background:rgba(94,234,212,0.35);border-color:rgba(94,234,212,0.65)}
+.habit-check.done::after{content:'✓';font-size:0.7rem;color:rgba(94,234,212,1);font-weight:700}
+.habit-text{font-family:'Crimson Pro',serif;font-size:0.85rem;color:rgba(245,237,216,0.75)}
+.habit-item.done-habit .habit-text{color:rgba(245,237,216,0.5)}
 /* ── EXTRAS SECTION ── */
 #extras-section{
   margin:20px 16px 0;
@@ -448,6 +457,12 @@ html,body{height:100%;background:var(--ink);font-family:'Crimson Pro',serif;over
     Tasks are done when they're done — before the evening, not at midnight. A day won is a day where all five happened when they were supposed to.
   </div>
 
+  <!-- DAILY HABITS -->
+  <div id="habits-section">
+    <div id="habits-label">Daily habits</div>
+    <div id="habits-list"></div>
+  </div>
+
   <!-- EXTRAS -->
   <div id="extras-section">
     <div id="extras-header">
@@ -633,6 +648,39 @@ function monthDayKeys(d){
   const y=d.getFullYear(), m=d.getMonth();
   const days=new Date(y,m+1,0).getDate();
   return Array.from({length:days},(_,i)=>dateKey(new Date(y,m,i+1)));
+}
+
+// ═══════════════════════════════════════════════
+// DAILY HABITS (tracked, no impact on win/loss)
+// ═══════════════════════════════════════════════
+const HABITS=[
+  {id:'social',label:'Social media ≤15 mins'},
+  {id:'phone',label:'No phone at night'},
+  {id:'steps',label:'10k steps'}
+];
+
+function renderHabits(){
+  const d=load();
+  const dayData=d.days?.[currentKey]||{};
+  const habits=dayData.habits||{};
+  const list=document.getElementById('habits-list');
+  list.innerHTML=HABITS.map(h=>{
+    const done=habits[h.id]||false;
+    return`<div class="habit-item${done?' done-habit':''}">
+      <button class="habit-check${done?' done':''}" onclick="toggleHabit('${h.id}')"></button>
+      <div class="habit-text">${h.label}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleHabit(id){
+  const d=load();
+  if(!d.days)d.days={};
+  if(!d.days[currentKey])d.days[currentKey]={type:'normal',tasks:['','','','',''],done:[false,false,false,false,false],completed:false,won:false};
+  if(!d.days[currentKey].habits)d.days[currentKey].habits={};
+  d.days[currentKey].habits[id]=!d.days[currentKey].habits[id];
+  save(d);
+  renderHabits();
 }
 
 // ═══════════════════════════════════════════════
@@ -832,6 +880,7 @@ function renderDay(){
     isPast(currentKey) ? 'Five tasks — edit if needed' : 'Five tasks — set for tomorrow or today';
 
   updateStreak();
+  renderHabits();
   renderExtras();
 }
 
